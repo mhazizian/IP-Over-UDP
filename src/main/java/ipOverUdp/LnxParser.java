@@ -17,7 +17,7 @@ public class LnxParser {
     private Scanner sc;
 
 
-    public LnxParser(String fileName) throws FileNotFoundException {
+    LnxParser(String fileName) throws FileNotFoundException {
         File file = new File(fileName);
         sc = new Scanner(file);
 
@@ -27,7 +27,7 @@ public class LnxParser {
         selfPort = Integer.parseInt(args[1]);
     }
 
-    public boolean nextLine() {
+    boolean nextLine() {
         if (sc.hasNextLine()) {
             String line = sc.nextLine();
             String[] args = line.split(" ");

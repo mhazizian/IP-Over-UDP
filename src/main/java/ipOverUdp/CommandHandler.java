@@ -10,17 +10,17 @@ enum CommandName {
     INTERFACES, ROUTES, DOWN, UP, SEND, QUIT;
 }
 
-public class CommandHandler {
-    private BufferedReader br;
+class CommandHandler {
+    private BufferedReader bufferedReader;
 
-    public CommandHandler() {
+    CommandHandler() {
         InputStreamReader r = new InputStreamReader(System.in);
-        BufferedReader br = new BufferedReader(r);
+        bufferedReader = new BufferedReader(r);
     }
 
-    public boolean hasNewCommand() {
+    boolean hasNewCommand() {
         try {
-            return br.ready();
+            return this.bufferedReader.ready();
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -28,10 +28,10 @@ public class CommandHandler {
         }
     }
 
-    public Pair<CommandName, String[]> getCommand() throws IOException {
+    Pair<CommandName, String[]> getCommand() throws IOException {
         if (!this.hasNewCommand())
             return null;
-        String line = br.readLine();
+        String line = this.bufferedReader.readLine();
 
         int argsDividerIndex = ordinalIndexOf(line, " ", 0);
         String command = line.substring(0, argsDividerIndex);
