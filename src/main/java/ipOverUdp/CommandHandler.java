@@ -31,10 +31,16 @@ class CommandHandler {
     Pair<CommandName, String[]> getCommand() throws IOException {
         if (!this.hasNewCommand())
             return null;
+
+        String command;
         String line = this.bufferedReader.readLine();
 
         int argsDividerIndex = ordinalIndexOf(line, " ", 0);
-        String command = line.substring(0, argsDividerIndex);
+        if (argsDividerIndex == -1)
+            command = line;
+        else
+            command = line.substring(0, argsDividerIndex);
+
 
         switch (command) {
             case "interfaces":
