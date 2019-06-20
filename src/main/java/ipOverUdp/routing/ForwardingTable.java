@@ -70,6 +70,9 @@ public class ForwardingTable {
             String ip = enumeration.nextElement();
             System.arraycopy(PacketFactory.ipStringToByteArray(ip), 0, res, i * 5, 4);
             Pair<Link, Integer> path = this.targetsInterface.get(ip).getMinPathInfo();
+            if (path.getRight() == -1)
+                continue;
+
             if (path.getLeft().getTargetInterface().equals(receivingInterface))
                 res[5 * i + 4] = -1;
             else
@@ -90,7 +93,11 @@ public class ForwardingTable {
             System.out.print(ip + "\t");
 
             Pair<Link, Integer> path = targetsInterface.get(ip).getMinPathInfo();
-            System.out.print(path.getLeft().getLinkInterface()+ "\t");
+            if (path.getLeft() == null)
+                System.out.print("invalid   \t");
+            else
+                System.out.print(path.getLeft().getLinkInterface()+ "\t");
+
             System.out.println(path.getRight()+ "\t");
 
 

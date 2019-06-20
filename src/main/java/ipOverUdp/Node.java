@@ -80,15 +80,21 @@ public class Node {
     private void handelCommand(CommandName commandType, String[] args) {
         switch (commandType) {
             case UP:
-            case DOWN:
-                this.sendDistantVectorPackets();
+                activateLink(args[0]);
                 break;
+
+            case DOWN:
+                deActivateLink(args[0]);
+                break;
+
             case INTERFACES:
                 printLinks();
                 break;
+
             case ROUTES:
                 forwardingTable.printRoutes();
                 break;
+
             case SEND:
                 System.out.println(args[0]);
                 System.out.println(args[1]);
@@ -173,7 +179,7 @@ public class Node {
             this.sendDistantVectorPackets();
     }
 
-    public void printLinks() {
+    private void printLinks() {
         System.out.println("## Interfaces:");
         System.out.println("host       \tport\tfrom       \tto       \tisActive");
 
@@ -185,5 +191,37 @@ public class Node {
             System.out.println(link.isActive());
 
         }
+    }
+
+    private void activateLink(String ip) {
+        Link link = Link.getLinkByInterface(ip, links);
+        if (link == null) {
+            System.out.println("Invalid interface.");
+            return;
+        }
+
+        if (link.isActive())
+            return;
+
+        link.setActive(true);
+        // TODO: announce link up.
+        this.sendDistantVectorPackets();
+        System.out.println("done.");
+    }
+
+    private void deActivateLink(String ip) {
+        Link link = Link.getLinkByInterface(ip, links);
+        if (link == null) {
+            System.out.println("Invalid interface.");
+            return;
+        }
+        if (!link.isActive())
+            return;
+
+
+        link.setActive(false);
+        // TODO: announce link down.
+        this.sendDistantVectorPackets();
+        System.out.println("done.");
     }
 }

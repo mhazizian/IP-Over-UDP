@@ -69,8 +69,8 @@ public class RoutingEntity {
                 optLink = path.getLeft();
             }
         }
-        if (minDistance == -1)
-            throw new RuntimeException("No valid path to given interface");
+//        if (minDistance == -1)
+//            throw new RuntimeException("No valid path to given interface");
 
         return new MutablePair<>(optLink, minDistance);
     }

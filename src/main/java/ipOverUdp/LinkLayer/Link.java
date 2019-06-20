@@ -3,6 +3,7 @@ package ipOverUdp.LinkLayer;
 
 import java.io.IOException;
 import java.net.*;
+import java.util.ArrayList;
 
 public class Link {
     private int port;
@@ -78,5 +79,13 @@ public class Link {
 
     public String getIp() {
         return ip;
+    }
+
+    public static Link getLinkByInterface(String ipInterface ,ArrayList<Link> links) {
+        for(Link link: links) {
+            if (link.getLinkInterface().equals(ipInterface))
+                return link;
+        }
+        return null;
     }
 }
