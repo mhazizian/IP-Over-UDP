@@ -96,48 +96,48 @@ public class Node {
                 break;
 
             case SEND:
-                System.out.println(args[0]);
-                System.out.println(args[1]);
-                System.out.println(args[2]);
-                PacketFactory pf = new PacketFactory();
-                pf.setIpProtocol(200);
-                pf.setSrcIp("17.34.51.68");
-                pf.setDstIp("255.255.128.192");
-                pf.setPayload("salam bar hame :D");
-
-                this.links.get(0).sendFrame(pf.getPacketData(), pf.getPacketSize());
-
+                sendPacket(args[0], args[1], args[2]);
                 break;
+
             case QUIT:
-                this.runProgram = false;
+//                this.runProgram = false;
+                this.sendDistantVectorPackets();
                 break;
         }
     }
 
     private void handelNewPacket(byte[] frameData, int frameSize) {
         PacketFactory packetParser = new PacketFactory(frameData, frameSize);
+        switch (packetParser.getIpProtocol()) {
+            case IpProtocolNumbers.DISTANT_VECTOR_PACKETS:
+                this.handelDistantVectorPacket(packetParser);
+                break;
 
-//        Runnable r = ipProtocolHandler.get(packetParser.getIpProtocol());
-//        if (r != null)
-//            r.run(packetParser);
-//        else {
-//            System.out.println("Invalid IP Protocol Number.");
-//            System.out.println("Dropping Packet.");
-//        }
+            case IpProtocolNumbers.ROUTING_PACKET:
+                if (isSelfInterface(packetParser.getDstIp())) {
+                    // TODO: implement this part.
+                    System.out.println("i got my packet :D");
+                } else {
+                    Link link = forwardingTable.getLink(packetParser.getDstIp());
+                    link.sendFrame(packetParser.getPacketData(), packetParser.getPacketSize());
+                }
+                break;
 
-        if (packetParser.getIpProtocol() == 17) {
-            // update forwarding table
-            // send distantVector Packets if necessary,
-            this.handelDistantVectorPacket(packetParser);
-        }
+            case IpProtocolNumbers.TEST_PACKET:
+                packetParser.print();
+                break;
 
-        if (isSelfInterface(packetParser.getDstIp())) {
-            // TODO: pass to upper layers
-            System.out.println("Packet received and passed to upper layer.");
-        } else {
-            System.out.println("re sending packet.");
-            Link link = forwardingTable.getLink(packetParser.getDstIp());
-            link.sendFrame(packetParser.getPacketData(), packetParser.getPacketSize());
+            default:
+
+//                Runnable r = ipProtocolHandler.get(packetParser.getIpProtocol());
+//                if (r != null)
+//                    r.run(packetParser);
+//                else {
+//                    System.out.println("Invalid IP Protocol Number.");
+//                    System.out.println("Dropping Packet.");
+//                }
+                break;
+
         }
     }
 
@@ -189,7 +189,6 @@ public class Node {
             System.out.print(link.getLinkInterface() + "\t");
             System.out.print(link.getTargetInterface() + "\t");
             System.out.println(link.isActive());
-
         }
     }
 
@@ -218,10 +217,25 @@ public class Node {
         if (!link.isActive())
             return;
 
-
         link.setActive(false);
         // TODO: announce link down.
         this.sendDistantVectorPackets();
         System.out.println("done.");
+    }
+
+    private void sendPacket(String ip, String ipProtocol, String message) {
+        Link link = forwardingTable.getLink(ip);
+        if (link == null) {
+            System.out.println("Dst ip not found.");
+            return;
+        }
+
+        PacketFactory pf = new PacketFactory();
+        pf.setIpProtocol(Integer.parseInt(ipProtocol));
+        pf.setSrcIp(link.getLinkInterface());
+        pf.setDstIp(ip);
+        pf.setPayload(message);
+
+        link.sendFrame(pf.getPacketData(), pf.getPacketSize());
     }
 }

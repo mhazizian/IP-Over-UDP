@@ -98,7 +98,7 @@ public class PacketFactory {
         System.arraycopy(this.data, PAYLOAD_IDX, payload, 0, size - HEADER_SIZE);
         return payload;
     }
-    
+
     public int getPayloadSize() {
         return size - HEADER_SIZE;
     }
@@ -114,6 +114,13 @@ public class PacketFactory {
 
     public int getPacketSize() {
         return this.size;
+    }
+
+    public void print() {
+        System.out.println("ProtocolNum: " + getIpProtocol());
+        System.out.println("SrcIP: " + getSrcIp());
+        System.out.println("DstIP: " + getDstIp());
+        System.out.println("Payload: " + getPayload());
     }
 
 }
