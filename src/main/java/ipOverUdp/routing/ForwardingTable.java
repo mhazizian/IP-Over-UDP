@@ -80,6 +80,23 @@ public class ForwardingTable {
         return res;
     }
 
+    public void printRoutes() {
+        System.out.println("Routes:");
+        System.out.println("DstIp\tusingInterface\tDistance");
+
+        Enumeration<String> enumeration = targetsInterface.keys();
+        while(enumeration.hasMoreElements()) {
+            String ip = enumeration.nextElement();
+            System.out.print(ip + "\t");
+
+            Pair<Link, Integer> path = targetsInterface.get(ip).getMinPathInfo();
+            System.out.print(path.getLeft().getLinkInterface()+ "\t");
+            System.out.println(path.getRight()+ "\t");
+
+
+        }
+    }
+
 
 
 }

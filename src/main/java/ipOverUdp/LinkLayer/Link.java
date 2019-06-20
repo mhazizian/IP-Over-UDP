@@ -72,4 +72,11 @@ public class Link {
         isActive = active;
     }
 
+    public int getPort() {
+        return port;
+    }
+
+    public String getIp() {
+        return ip;
+    }
 }

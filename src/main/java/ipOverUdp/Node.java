@@ -52,7 +52,7 @@ public class Node {
 
         createLinksFromInputFile(input);
 
-        for(Link link: this.links) {
+        for (Link link : this.links) {
             RoutingEntity re = new RoutingEntity(link.getTargetInterface(), links);
             forwardingTable.addTargetInterface(re);
         }
@@ -83,7 +83,10 @@ public class Node {
                 this.sendDistantVectorPackets();
                 break;
             case INTERFACES:
+                printLinks();
+                break;
             case ROUTES:
+                forwardingTable.printRoutes();
                 break;
             case SEND:
                 System.out.println(args[0]);
@@ -103,6 +106,7 @@ public class Node {
                 break;
         }
     }
+
     private void handelNewPacket(byte[] frameData, int frameSize) {
         PacketFactory packetParser = new PacketFactory(frameData, frameSize);
 
@@ -125,7 +129,6 @@ public class Node {
             System.out.println("Packet received and passed to upper layer.");
         } else {
             System.out.println("re sending packet.");
-
             Link link = forwardingTable.getLink(packetParser.getDstIp());
             link.sendFrame(packetParser.getPacketData(), packetParser.getPacketSize());
         }
@@ -139,7 +142,7 @@ public class Node {
     }
 
     private boolean isSelfInterface(String interfaceIp) {
-        for(Link link : links) {
+        for (Link link : links) {
             if (link.getLinkInterface().equals(interfaceIp))
                 return true;
         }
@@ -167,5 +170,19 @@ public class Node {
         );
         if (isChanged)
             this.sendDistantVectorPackets();
+    }
+
+    public void printLinks() {
+        System.out.println("Interfaces:");
+        System.out.println("host\tport\tfrom\tto\tisActive");
+
+        for (Link link : links) {
+            System.out.print(link.getIp() + "\t");
+            System.out.print(link.getPort() + "\t");
+            System.out.print(link.getLinkInterface() + "\t");
+            System.out.print(link.getTargetInterface() + "\t");
+            System.out.println(link.isActive());
+
+        }
     }
 }
