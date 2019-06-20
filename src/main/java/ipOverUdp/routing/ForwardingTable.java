@@ -53,9 +53,9 @@ public class ForwardingTable {
         ArrayList<Pair<String, Integer>> distances = new ArrayList<>();
 
         for (int i = 0; i < payloadSize; i += 5) {
-            System.arraycopy(payload, i * 5, temp, 0, 4);
+            System.arraycopy(payload, i, temp, 0, 4);
             String ip = PacketFactory.ipByteArrayToString(temp);
-            Integer distance = payload[5 * i + 4] & 0xFF;
+            Integer distance = payload[i + 4] & 0xFF;
             distances.add(new MutablePair<>(ip, distance));
         }
         return this.updateRoutingTable(myInterfaceIp, distances, links);
