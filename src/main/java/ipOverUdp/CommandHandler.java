@@ -67,6 +67,7 @@ class CommandHandler {
                 argsSend[2] = line.substring(ordinalIndexOf(line, " ", 2) + 1);
                 return new Pair<>(CommandName.SEND, argsSend);
         }
+        System.out.println("Invalid Command.");
         return null;
     }
 

@@ -19,7 +19,11 @@ public class RoutingEntity {
     public RoutingEntity(String _targetInterface, ArrayList<Link> links) {
         this(_targetInterface);
         for (Link link : links) {
-            this.addPath(link, null);
+            if (link.getTargetInterface().equals(this.targetInterface))
+                this.addPath(link, 1);
+            else
+                this.addPath(link, null);
+
         }
     }
 
@@ -41,7 +45,7 @@ public class RoutingEntity {
                     return true;
                 }
                 return false;
-                    
+
             }
         }
 
@@ -54,12 +58,15 @@ public class RoutingEntity {
         Link optLink = null;
 
         for (Pair<Link, Integer> path : this.distances) {
-            if (!path.getKey().isActive())
+            if (!path.getLeft().isActive())
                 continue;
 
-            if (path.getValue() < minDistance || minDistance != -1) {
-                minDistance = path.getValue();
-                optLink = path.getKey();
+            if (path.getRight() == -1)
+                continue;
+
+            if (path.getRight() < minDistance || minDistance == -1) {
+                minDistance = path.getRight();
+                optLink = path.getLeft();
             }
         }
         if (minDistance == -1)

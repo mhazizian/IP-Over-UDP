@@ -65,7 +65,8 @@ public class Node {
         while (this.runProgram) {
             if (commandHandler.hasNewCommand()) {
                 Pair<CommandName, String[]> command = commandHandler.getCommand();
-                handelCommand(command.getKey(), command.getValue());
+                if (command != null)
+                    handelCommand(command.getKey(), command.getValue());
             }
 
             Pair<byte[], Integer> newFrame = listener.getFrame();
@@ -173,8 +174,8 @@ public class Node {
     }
 
     public void printLinks() {
-        System.out.println("Interfaces:");
-        System.out.println("host\tport\tfrom\tto\tisActive");
+        System.out.println("## Interfaces:");
+        System.out.println("host       \tport\tfrom       \tto       \tisActive");
 
         for (Link link : links) {
             System.out.print(link.getIp() + "\t");

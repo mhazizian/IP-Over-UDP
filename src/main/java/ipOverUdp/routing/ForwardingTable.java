@@ -81,8 +81,8 @@ public class ForwardingTable {
     }
 
     public void printRoutes() {
-        System.out.println("Routes:");
-        System.out.println("DstIp\tusingInterface\tDistance");
+        System.out.println("## Routes:");
+        System.out.println("DstIp       \tthrough  \tDistance");
 
         Enumeration<String> enumeration = targetsInterface.keys();
         while(enumeration.hasMoreElements()) {
