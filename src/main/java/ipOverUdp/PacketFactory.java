@@ -16,7 +16,7 @@ public class PacketFactory {
     private byte[] data;
     private int size;
 
-    static byte[] ipStringToByteArray(String ip) {
+    public static byte[] ipStringToByteArray(String ip) {
         byte[] res = new byte[4];
         String[] splitedIp = ip.split("\\.", 4);
 
@@ -26,7 +26,7 @@ public class PacketFactory {
         return res;
     }
 
-    static String ipByteArrayToString(byte[] ip) {
+    public static String ipByteArrayToString(byte[] ip) {
         String res = (ip[0] & 0xFF) + ".";
         res += (ip[1] & 0xFF) + ".";
         res += (ip[2] & 0xFF) + ".";

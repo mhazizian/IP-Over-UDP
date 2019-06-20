@@ -2,13 +2,15 @@ package ipOverUdp;
 
 import ipOverUdp.LinkLayer.Link;
 import ipOverUdp.LinkLayer.Listener;
+import ipOverUdp.routing.ForwardingTable;
+import ipOverUdp.routing.RoutingEntity;
 import javafx.util.Pair;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
+import java.net.SocketException;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Hashtable;
 
 public class Node {
     static final int MAX_NODE_NUMBER = 64;
@@ -16,6 +18,8 @@ public class Node {
     private Listener listener;
     private CommandHandler commandHandler;
     private ArrayList<Link> links;
+    private ForwardingTable forwardingTable;
+    private Hashtable<Integer, Runnable> ipProtocolHandler;
 
     private boolean runProgram;
 
@@ -41,17 +45,20 @@ public class Node {
         //  5-traceroute and ICMP
 
         listener = new Listener(input.getSelfHost(), input.getSelfPort());
-
+        forwardingTable = new ForwardingTable();
         this.links = new ArrayList<>();
-        while (input.nextLine()) {
-            Link link = new Link(input.getLinkHost(), input.getLinkPort(), input.getLinkIpSrc());
-            this.links.add(link);
+        commandHandler = new CommandHandler();
+        ipProtocolHandler = new Hashtable<>();
+
+        createLinksFromInputFile(input);
+
+        for(Link link: this.links) {
+            RoutingEntity re = new RoutingEntity(link.getTargetInterface(), links);
+            forwardingTable.addTargetInterface(re);
         }
 
-        commandHandler = new CommandHandler();
         this.runProgram = true;
         run();
-
     }
 
     private void run() throws IOException {
@@ -63,7 +70,7 @@ public class Node {
 
             Pair<byte[], Integer> newFrame = listener.getFrame();
             if (newFrame != null)
-                handelNewFrame(newFrame.getKey(), newFrame.getValue());
+                handelNewPacket(newFrame.getKey(), newFrame.getValue());
         }
     }
 
@@ -92,15 +99,44 @@ public class Node {
                 break;
         }
     }
-    private void handelNewFrame(byte[] frameData, int frameSize) {
-        System.out.println("given Frame :\n" + Arrays.toString(frameData));
-        System.out.println("given size: " + frameSize);
+    private void handelNewPacket(byte[] frameData, int frameSize) {
+        PacketFactory packetParser = new PacketFactory(frameData, frameSize);
 
-        PacketFactory pf = new PacketFactory(frameData, frameSize);
-        System.out.println("IP-protocol is " + pf.getIpProtocol());
-        System.out.println(pf.getSrcIp());
-        System.out.println(pf.getDstIp());
-        System.out.println(pf.getPayload());
+//        Runnable r = ipProtocolHandler.get(packetParser.getIpProtocol());
+//        if (r != null)
+//            r.run(packetParser);
+//        else {
+//            System.out.println("Invalid IP Protocol Number.");
+//            System.out.println("Dropping Packet.");
+//        }
 
+        if (packetParser.getIpProtocol() == 17) {
+            // update forwarding table
+        }
+
+        if (isSelfInterface(packetParser.getDstIp())) {
+            // TODO: pass to upper layers
+            System.out.println("Packet received and passed to upper layer.");
+        } else {
+            System.out.println("re sending packet.");
+
+            Link link = forwardingTable.getLink(packetParser.getDstIp());
+            link.sendFrame(packetParser.getPacketData(), packetParser.getPacketSize());
+        }
+    }
+
+    private void createLinksFromInputFile(LnxParser input) throws SocketException {
+        while (input.nextLine()) {
+            Link link = new Link(input.getLinkHost(), input.getLinkPort(), input.getLinkIpSrc(), input.getLinkIpDst());
+            this.links.add(link);
+        }
+    }
+
+    private boolean isSelfInterface(String interfaceIp) {
+        for(Link link : links) {
+            if (link.getLinkInterface().equals(interfaceIp))
+                return true;
+        }
+        return false;
     }
 }

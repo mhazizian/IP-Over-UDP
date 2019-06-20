@@ -8,16 +8,20 @@ public class Link {
     private int port;
     private String ip;
     private String linkInterface; // interface related to src
+    private String targetInterface; // interface related to dst
+    private boolean isActive;
 
     private byte[] buffer;
     private DatagramSocket socket;
 
     public final static int MAX_FRAME_SIZE = 1400;
 
-    public Link(String _ip, int _port, String linkInterface) throws SocketException {
+    public Link(String _ip, int _port, String linkInterface, String targetInterface) throws SocketException {
         this.ip = _ip;
         this.port = _port;
         this.linkInterface = linkInterface;
+        this.targetInterface = targetInterface;
+        this.isActive = true;
         this.socket = new DatagramSocket();
     }
 
@@ -55,4 +59,17 @@ public class Link {
     public String getLinkInterface() {
         return linkInterface;
     }
+
+    public String getTargetInterface() {
+        return this.targetInterface;
+    }
+
+    public boolean isActive() {
+        return isActive;
+    }
+
+    public void setActive(boolean active) {
+        isActive = active;
+    }
+
 }
