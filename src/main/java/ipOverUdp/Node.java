@@ -117,6 +117,7 @@ public class Node {
                 if (isSelfInterface(packetParser.getDstIp())) {
                     // TODO: implement this part.
                     System.out.println("i got my packet :D");
+                    packetParser.print();
                 } else {
                     Link link = forwardingTable.getLink(packetParser.getDstIp());
                     link.sendFrame(packetParser.getPacketData(), packetParser.getPacketSize());
@@ -158,6 +159,7 @@ public class Node {
 
     private void sendDistantVectorPackets() {
         for (Link link : links) {
+            System.out.println("Sending DV packet.");
             PacketFactory pf = new PacketFactory();
             pf.setIpProtocol(17);
             pf.setSrcIp(link.getLinkInterface());

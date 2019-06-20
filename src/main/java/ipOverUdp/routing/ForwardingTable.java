@@ -35,7 +35,7 @@ public class ForwardingTable {
             if (distance != -1)
                 distance += 1;
 
-            if (targetsInterface.contains(set.getLeft()))
+            if (targetsInterface.containsKey(set.getLeft()))
                 isChanged = isChanged | targetsInterface.get(set.getLeft()).updateDistances(intermediateInterface, distance);
             else {
                 RoutingEntity re = new RoutingEntity(set.getLeft(), links);
@@ -70,10 +70,8 @@ public class ForwardingTable {
             String ip = enumeration.nextElement();
             System.arraycopy(PacketFactory.ipStringToByteArray(ip), 0, res, i * 5, 4);
             Pair<Link, Integer> path = this.targetsInterface.get(ip).getMinPathInfo();
-            if (path.getRight() == -1)
-                continue;
 
-            if (path.getLeft().getTargetInterface().equals(receivingInterface))
+            if (path.getRight() == -1 || path.getLeft().getTargetInterface().equals(receivingInterface))
                 res[5 * i + 4] = -1;
             else
                 res[5 * i + 4] = path.getRight().byteValue();
@@ -99,7 +97,6 @@ public class ForwardingTable {
                 System.out.print(path.getLeft().getLinkInterface()+ "\t");
 
             System.out.println(path.getRight()+ "\t");
-
 
         }
     }

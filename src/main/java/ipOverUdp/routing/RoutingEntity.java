@@ -21,6 +21,8 @@ public class RoutingEntity {
         for (Link link : links) {
             if (link.getTargetInterface().equals(this.targetInterface))
                 this.addPath(link, 1);
+            else if (link.getLinkInterface().equals(this.targetInterface))
+                this.addPath(link, 0);
             else
                 this.addPath(link, null);
 
@@ -32,7 +34,9 @@ public class RoutingEntity {
         if (distance == null)
             distance = -1;
 
-//        this.distances.add(new Pair<>(link, distance));
+        if (link.getLinkInterface().equals(targetInterface))
+            distance = 0;
+
         this.distances.add(new MutablePair<>(link, distance));
     }
 
@@ -41,11 +45,11 @@ public class RoutingEntity {
         for (Pair<Link, Integer> path : this.distances) {
             if (path.getLeft().getLinkInterface().equals(intermediateInterface)) {
                 if (path.getValue() == -1 || path.getValue() > distance) {
+                    System.out.println("changed: " + path.getLeft().getLinkInterface() + " from:" + path.getValue() +" into=" + distance + " dest:" + targetInterface);
                     path.setValue(distance);
                     return true;
                 }
                 return false;
-
             }
         }
 
