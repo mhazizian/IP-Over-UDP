@@ -72,12 +72,16 @@ public class Node {
             if (newFrame != null)
                 handelNewPacket(newFrame.getKey(), newFrame.getValue());
         }
+
+        // TODO: close sockets. close open files.
     }
 
     private void handelCommand(CommandName commandType, String[] args) {
         switch (commandType) {
             case UP:
             case DOWN:
+                this.sendDistantVectorPackets();
+                break;
             case INTERFACES:
             case ROUTES:
                 break;
@@ -112,6 +116,8 @@ public class Node {
 
         if (packetParser.getIpProtocol() == 17) {
             // update forwarding table
+            // send distantVector Packets if necessary,
+            this.handelDistantVectorPacket(packetParser);
         }
 
         if (isSelfInterface(packetParser.getDstIp())) {
@@ -138,5 +144,28 @@ public class Node {
                 return true;
         }
         return false;
+    }
+
+    private void sendDistantVectorPackets() {
+        for (Link link : links) {
+            PacketFactory pf = new PacketFactory();
+            pf.setIpProtocol(17);
+            pf.setSrcIp(link.getLinkInterface());
+            pf.setDstIp(link.getTargetInterface());
+            pf.setPayload(forwardingTable.getRoutingPacketPayload(link.getTargetInterface()));
+
+            link.sendFrame(pf.getPacketData(), pf.getPacketSize());
+        }
+    }
+
+    private void handelDistantVectorPacket(PacketFactory packetParser) {
+        boolean isChanged = this.forwardingTable.updateRoutingTable(
+                packetParser.getDstIp(),
+                packetParser.getPayloadInByteArray(),
+                packetParser.getPayloadSize(),
+                this.links
+        );
+        if (isChanged)
+            this.sendDistantVectorPackets();
     }
 }

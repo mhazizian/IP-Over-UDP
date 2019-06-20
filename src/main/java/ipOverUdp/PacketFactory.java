@@ -98,6 +98,10 @@ public class PacketFactory {
         System.arraycopy(this.data, PAYLOAD_IDX, payload, 0, size - HEADER_SIZE);
         return payload;
     }
+    
+    public int getPayloadSize() {
+        return size - HEADER_SIZE;
+    }
 
     public String getPayload() {
         return new String(this.getPayloadInByteArray(), StandardCharsets.UTF_8);

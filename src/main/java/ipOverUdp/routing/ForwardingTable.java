@@ -3,6 +3,7 @@ package ipOverUdp.routing;
 
 import ipOverUdp.LinkLayer.Link;
 import ipOverUdp.PacketFactory;
+import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
@@ -27,17 +28,37 @@ public class ForwardingTable {
         targetsInterface.put(re.getTargetInterface(), re);
     }
 
-    public void updateRoutingTable(String intermediateInterface , ArrayList<Pair<String, Integer>> distances, ArrayList<Link> links) {
-        for (Pair<String, Integer> set: distances) {
+    public boolean updateRoutingTable(String intermediateInterface, ArrayList<Pair<String, Integer>> distances, ArrayList<Link> links) {
+        boolean isChanged = false;
+        for (Pair<String, Integer> set : distances) {
+            int distance = set.getRight();
+            if (distance != -1)
+                distance += 1;
+
             if (targetsInterface.contains(set.getLeft()))
-                targetsInterface.get(set.getLeft()).updateDistances(intermediateInterface, set.getRight() + 1);
+                isChanged = isChanged | targetsInterface.get(set.getLeft()).updateDistances(intermediateInterface, distance);
             else {
                 RoutingEntity re = new RoutingEntity(set.getLeft(), links);
-                re.updateDistances(intermediateInterface, 1 + set.getRight());
+                re.updateDistances(intermediateInterface, distance);
                 addTargetInterface(re);
+                isChanged = true;
             }
 
         }
+        return isChanged;
+    }
+
+    public boolean updateRoutingTable(String myInterfaceIp, byte[] payload, int payloadSize, ArrayList<Link> links) {
+        byte[] temp = new byte[4];
+        ArrayList<Pair<String, Integer>> distances = new ArrayList<>();
+
+        for (int i = 0; i < payloadSize; i += 5) {
+            System.arraycopy(payload, i * 5, temp, 0, 4);
+            String ip = PacketFactory.ipByteArrayToString(temp);
+            Integer distance = payload[5 * i + 4] & 0xFF;
+            distances.add(new MutablePair<>(ip, distance));
+        }
+        return this.updateRoutingTable(myInterfaceIp, distances, links);
     }
 
     public byte[] getRoutingPacketPayload(String receivingInterface) {
@@ -45,13 +66,20 @@ public class ForwardingTable {
 
         Enumeration<String> enumeration = targetsInterface.keys();
         int i = 0;
-        while(enumeration.hasMoreElements()) {
+        while (enumeration.hasMoreElements()) {
             String ip = enumeration.nextElement();
             System.arraycopy(PacketFactory.ipStringToByteArray(ip), 0, res, i * 5, 4);
-            // TODO: complete here.
+            Pair<Link, Integer> path = this.targetsInterface.get(ip).getMinPathInfo();
+            if (path.getLeft().getTargetInterface().equals(receivingInterface))
+                res[5 * i + 4] = -1;
+            else
+                res[5 * i + 4] = path.getRight().byteValue();
+
+            i++;
         }
         return res;
     }
+
 
 
 }

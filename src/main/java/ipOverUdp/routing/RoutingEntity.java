@@ -32,20 +32,24 @@ public class RoutingEntity {
         this.distances.add(new MutablePair<>(link, distance));
     }
 
-    public void updateDistances(String intermediateInterface, Integer distance) {
+    public boolean updateDistances(String intermediateInterface, Integer distance) {
         // intermediateInterface is virtualIp related to self Interfaces
         for (Pair<Link, Integer> path : this.distances) {
-            if (path.getKey().getLinkInterface().equals(intermediateInterface)) {
-                if (path.getValue() == -1 || path.getValue() > distance)
+            if (path.getLeft().getLinkInterface().equals(intermediateInterface)) {
+                if (path.getValue() == -1 || path.getValue() > distance) {
                     path.setValue(distance);
-                return;
+                    return true;
+                }
+                return false;
+                    
             }
         }
 
         throw new RuntimeException("given intermediateInterface does not exist!!!");
     }
 
-    public Link getMinPath() {
+    public Pair<Link, Integer> getMinPathInfo() {
+
         int minDistance = -1;
         Link optLink = null;
 
@@ -61,8 +65,13 @@ public class RoutingEntity {
         if (minDistance == -1)
             throw new RuntimeException("No valid path to given interface");
 
-        return optLink;
+        return new MutablePair<>(optLink, minDistance);
     }
+
+    public Link getMinPath() {
+        return this.getMinPathInfo().getLeft();
+    }
+
 
     public String getTargetInterface() {
         return targetInterface;
