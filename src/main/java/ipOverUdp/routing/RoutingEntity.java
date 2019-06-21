@@ -32,7 +32,7 @@ public class RoutingEntity {
 
     public void addPath(Link link, Integer distance) {
         if (distance == null)
-            distance = -1;
+            distance = 255;
 
         if (link.getLinkInterface().equals(targetInterface))
             distance = 0;
@@ -43,8 +43,11 @@ public class RoutingEntity {
     public boolean updateDistances(String intermediateInterface, Integer distance) {
         // intermediateInterface is virtualIp related to self Interfaces
         for (Pair<Link, Integer> path : this.distances) {
+
             if (path.getLeft().getLinkInterface().equals(intermediateInterface)) {
-                if (path.getValue() == -1 || path.getValue() > distance) {
+                if (path.getLeft().getLinkInterface().equals(targetInterface)) {
+                    path.setValue(0);
+                } else if (!path.getValue().equals(distance)) {
                     System.out.println("changed: " + path.getLeft().getLinkInterface() + " from:" + path.getValue() +" into=" + distance + " dest:" + targetInterface);
                     path.setValue(distance);
                     return true;
@@ -58,17 +61,17 @@ public class RoutingEntity {
 
     public Pair<Link, Integer> getMinPathInfo() {
 
-        int minDistance = -1;
+        int minDistance = 255;
         Link optLink = null;
 
         for (Pair<Link, Integer> path : this.distances) {
             if (!path.getLeft().isActive())
                 continue;
 
-            if (path.getRight() == -1)
+            if (path.getRight() == 255)
                 continue;
 
-            if (path.getRight() < minDistance || minDistance == -1) {
+            if (path.getRight() < minDistance) {
                 minDistance = path.getRight();
                 optLink = path.getLeft();
             }

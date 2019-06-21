@@ -39,7 +39,7 @@ public class PacketFactory {
     public PacketFactory() {
         // for creating new Packet
         data = new byte[Link.MAX_FRAME_SIZE];
-        size = 0;
+        size = HEADER_SIZE;
 
     }
 
@@ -54,7 +54,7 @@ public class PacketFactory {
 
     public void setPayload(byte[] newData) {
         System.arraycopy(newData, 0, this.data, PAYLOAD_IDX, newData.length);
-        this.size += newData.length + HEADER_SIZE;
+        this.size = newData.length + HEADER_SIZE;
 
     }
 

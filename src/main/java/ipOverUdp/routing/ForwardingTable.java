@@ -32,7 +32,7 @@ public class ForwardingTable {
         boolean isChanged = false;
         for (Pair<String, Integer> set : distances) {
             int distance = set.getRight();
-            if (distance != -1)
+            if (distance != 255)
                 distance += 1;
 
             if (targetsInterface.containsKey(set.getLeft()))
@@ -71,8 +71,8 @@ public class ForwardingTable {
             System.arraycopy(PacketFactory.ipStringToByteArray(ip), 0, res, i * 5, 4);
             Pair<Link, Integer> path = this.targetsInterface.get(ip).getMinPathInfo();
 
-            if (path.getRight() == -1 || path.getLeft().getTargetInterface().equals(receivingInterface))
-                res[5 * i + 4] = -1;
+            if (path.getRight() == 255 || (path.getLeft().getTargetInterface().equals(receivingInterface) && path.getRight() != 0))
+                res[5 * i + 4] = (byte) 255;
             else
                 res[5 * i + 4] = path.getRight().byteValue();
 

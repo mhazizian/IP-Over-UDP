@@ -36,6 +36,12 @@ public class Link {
     }
 
     public void sendFrame(byte[] frameData, int size) {
+        if (!isActive) {
+            System.out.println("Link is deactivate, can't send frame.");
+            return;
+        }
+
+
         if (size > MAX_FRAME_SIZE)
             throw new RuntimeException("frameSize is greater than MTU");
 
