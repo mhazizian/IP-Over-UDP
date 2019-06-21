@@ -151,7 +151,6 @@ public class Node {
                 break;
 
             case IpProtocolNumbers.ROUTING_PACKET:
-                System.out.println(packetParser.getTTL() + " ");
                 if (isSelfInterface(packetParser.getDstIp())) {
                     System.out.println("i got my packet :D");
                     packetParser.print();
@@ -374,6 +373,12 @@ public class Node {
     private void sendTraceRoutePacket() {
         PacketFactory pf = new PacketFactory();
         Link link = forwardingTable.getLink(traceRouteTragetIP);
+        if (link == null) {
+            System.out.println("invalid Destination address");
+            System.out.println("Traceroute stopped.");
+            traceRouteTTL = -1;
+            return;
+        }
 
         pf.setIpProtocol(IpProtocolNumbers.ROUTING_PACKET);
         pf.setDstIp(traceRouteTragetIP);
