@@ -2,12 +2,15 @@ package ipOverUdp;
 
 import ipOverUdp.LinkLayer.Link;
 import ipOverUdp.LinkLayer.Listener;
+import ipOverUdp.protocolNumHandler.TestHandler;
 import ipOverUdp.routing.ForwardingTable;
 import ipOverUdp.routing.RoutingEntity;
 import javafx.util.Pair;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Hashtable;
@@ -19,7 +22,7 @@ public class Node {
     private CommandHandler commandHandler;
     private ArrayList<Link> links;
     private ForwardingTable forwardingTable;
-    private Hashtable<Integer, Runnable> ipProtocolHandler;
+    private Hashtable<Integer, Method> ipProtocolHandler;
 
     private boolean runProgram;
 
@@ -58,6 +61,8 @@ public class Node {
         }
 
         this.runProgram = true;
+
+        TestHandler.registerHandler(this);
         run();
     }
 
@@ -131,7 +136,7 @@ public class Node {
                 Link link = Link.getLinkByInterface(packetParser.getDstIp(), links);
                 if (link != null && link.getTargetInterface().equals(packetParser.getSrcIp()))
                     link.setActive(false);
-                    this.sendDistantVectorPackets();
+                this.sendDistantVectorPackets();
                 break;
 
             case IpProtocolNumbers.LINK_UP_PACKET:
@@ -146,6 +151,14 @@ public class Node {
                 break;
 
             default:
+                if (ipProtocolHandler.containsKey(packetParser.getIpProtocol())) {
+                    Method handler = ipProtocolHandler.get(packetParser.getIpProtocol());
+                    try {
+                        handler.invoke(null, packetParser);
+                    } catch (IllegalAccessException | InvocationTargetException e) {
+                        e.printStackTrace();
+                    }
+                }
 
 //                Runnable r = ipProtocolHandler.get(packetParser.getIpProtocol());
 //                if (r != null)
@@ -273,5 +286,9 @@ public class Node {
         pf.setPayload(message);
 
         link.sendFrame(pf.getPacketData(), pf.getPacketSize());
+    }
+
+    public void registerHandler(Method method, int protocolNum) {
+        this.ipProtocolHandler.put(protocolNum, method);
     }
 }
