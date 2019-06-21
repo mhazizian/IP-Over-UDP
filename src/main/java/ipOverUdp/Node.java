@@ -99,9 +99,12 @@ public class Node {
                 sendPacket(args[0], args[1], args[2]);
                 break;
 
-            case QUIT:
-//                this.runProgram = false;
+            case START:
                 this.sendDistantVectorPackets();
+                break;
+
+            case QUIT:
+                this.runProgram = false;
                 break;
         }
     }
@@ -176,7 +179,7 @@ public class Node {
             if (!link.isActive())
                 continue;
 
-            System.out.println("Sending DV packet.");
+//            System.out.println("Sending DV packet.");
             PacketFactory pf = new PacketFactory();
             pf.setIpProtocol(17);
             pf.setSrcIp(link.getLinkInterface());
@@ -188,7 +191,7 @@ public class Node {
     }
 
     private void handelDistantVectorPacket(PacketFactory packetParser) {
-        System.out.println("Got DV Packet.");
+//        System.out.println("Got DV Packet.");
         boolean isChanged = this.forwardingTable.updateRoutingTable(
                 packetParser.getDstIp(),
                 packetParser.getPayloadInByteArray(),
@@ -229,7 +232,7 @@ public class Node {
         pf.setSrcIp(link.getLinkInterface());
         pf.setDstIp(link.getTargetInterface());
         link.sendFrame(pf.getPacketData(), pf.getPacketSize());
-        
+
         // TODO: announce link up.
         this.sendDistantVectorPackets();
         System.out.println("done.");

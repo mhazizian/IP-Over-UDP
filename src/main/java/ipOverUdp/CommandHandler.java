@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 
 enum CommandName {
-    INTERFACES, ROUTES, DOWN, UP, SEND, QUIT;
+    INTERFACES, ROUTES, DOWN, UP, SEND, QUIT, START;
 }
 
 class CommandHandler {
@@ -49,6 +49,8 @@ class CommandHandler {
                 return new Pair<>(CommandName.ROUTES, null);
             case "q":
                 return new Pair<>(CommandName.QUIT, null);
+            case "start":
+                return new Pair<>(CommandName.START, null);
 
             case "down":
                 String[] argsDown = new String[1];

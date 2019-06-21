@@ -48,7 +48,7 @@ public class RoutingEntity {
                 if (path.getLeft().getLinkInterface().equals(targetInterface)) {
                     path.setValue(0);
                 } else if (!path.getValue().equals(distance)) {
-                    System.out.println("changed: " + path.getLeft().getLinkInterface() + " from:" + path.getValue() +" into=" + distance + " dest:" + targetInterface);
+//                    System.out.println("changed: " + path.getLeft().getLinkInterface() + " from:" + path.getValue() +" into=" + distance + " dest:" + targetInterface);
                     path.setValue(distance);
                     return true;
                 }
