@@ -125,11 +125,17 @@ public class Node {
                 break;
 
             case IpProtocolNumbers.LINK_DOWN_PACKET:
-//                deActivateLink(packetParser.getDstIp());
                 Link link = Link.getLinkByInterface(packetParser.getDstIp(), links);
                 if (link != null && link.getTargetInterface().equals(packetParser.getSrcIp()))
                     link.setActive(false);
                     this.sendDistantVectorPackets();
+                break;
+
+            case IpProtocolNumbers.LINK_UP_PACKET:
+                Link linkUp = Link.getLinkByInterface(packetParser.getDstIp(), links);
+                if (linkUp != null && linkUp.getTargetInterface().equals(packetParser.getSrcIp()))
+                    linkUp.setActive(true);
+                this.sendDistantVectorPackets();
                 break;
 
             case IpProtocolNumbers.TEST_PACKET:
@@ -217,6 +223,13 @@ public class Node {
             return;
 
         link.setActive(true);
+
+        PacketFactory pf = new PacketFactory();
+        pf.setIpProtocol(IpProtocolNumbers.LINK_UP_PACKET);
+        pf.setSrcIp(link.getLinkInterface());
+        pf.setDstIp(link.getTargetInterface());
+        link.sendFrame(pf.getPacketData(), pf.getPacketSize());
+        
         // TODO: announce link up.
         this.sendDistantVectorPackets();
         System.out.println("done.");
