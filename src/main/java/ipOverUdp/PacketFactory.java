@@ -8,9 +8,10 @@ public class PacketFactory {
     private static final int IP_PROTOCOL_IDX = 0;
     private static final int SRC_IP_IDX = 1;
     private static final int DST_IP_IDX = 5;
-    private static final int PAYLOAD_IDX = 9;
+    private static final int TTL_IDX = 9;
+    private static final int PAYLOAD_IDX = 10;
 
-    private static final int HEADER_SIZE = 9;
+    private static final int HEADER_SIZE = 10;
 
 
     private byte[] data;
@@ -81,6 +82,14 @@ public class PacketFactory {
         return (this.data[IP_PROTOCOL_IDX] & 0xFF);
     }
 
+    public void setTTL(int ttl) {
+        this.data[TTL_IDX] = (byte) ttl;
+    }
+
+    public int getTTL() {
+        return (this.data[TTL_IDX] & 0xFF);
+    }
+
     public String getSrcIp() {
         byte[] ip = new byte[4];
         System.arraycopy(this.data, SRC_IP_IDX, ip, 0, 4);
@@ -122,5 +131,10 @@ public class PacketFactory {
         System.out.println("DstIP: " + getDstIp());
         System.out.println("Payload: " + getPayload());
     }
+
+    public boolean isICMP() {
+        return (getIpProtocol() < 13) && (getIpProtocol() != 0);
+    }
+
 
 }

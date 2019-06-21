@@ -21,7 +21,7 @@ public class ForwardingTable {
         if (targetsInterface.containsKey(interfaceIp))
             return targetsInterface.get(interfaceIp).getMinPath();
         else
-            throw new RuntimeException("given interface not found");
+            return null;
     }
 
     public void addTargetInterface(RoutingEntity re) {

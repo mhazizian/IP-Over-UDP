@@ -1,5 +1,6 @@
 package ipOverUdp;
 
+
 import ipOverUdp.LinkLayer.Link;
 import ipOverUdp.LinkLayer.Listener;
 import ipOverUdp.protocolNumHandler.TestHandler;
@@ -23,6 +24,10 @@ public class Node {
     private ArrayList<Link> links;
     private ForwardingTable forwardingTable;
     private Hashtable<Integer, Method> ipProtocolHandler;
+
+    private int traceRouteTTL;
+    private String traceRouteTragetIP;
+
 
     private boolean runProgram;
 
@@ -61,6 +66,7 @@ public class Node {
         }
 
         this.runProgram = true;
+        this.traceRouteTTL = -1;
 
         TestHandler.registerHandler(this);
         run();
@@ -108,6 +114,10 @@ public class Node {
                 this.sendDistantVectorPackets();
                 break;
 
+            case TRACEROUTE:
+                this.traceRouteInitializer(args[0]);
+                break;
+
             case QUIT:
                 this.runProgram = false;
                 break;
@@ -116,17 +126,38 @@ public class Node {
 
     private void handelNewPacket(byte[] frameData, int frameSize) {
         PacketFactory packetParser = new PacketFactory(frameData, frameSize);
+        if (packetParser.isICMP()) {
+            if (isSelfInterface(packetParser.getDstIp())) {
+                if (packetParser.getIpProtocol() == IpProtocolNumbers.ICMP_TIME_EXEEDED_PACKETS)
+                    traceRouteHandler(packetParser);
+
+            } else {
+                Link link = forwardingTable.getLink(packetParser.getDstIp());
+                if (link != null)
+                    link.sendFrame(packetParser.getPacketData(), packetParser.getPacketSize());
+                else
+                    System.out.println("DstIp no recognized, packet dropped.");
+
+            }
+            return;
+        }
+        if (packetParser.getTTL() == 0) {
+            sendICMPTimeExceeded(packetParser);
+            return;
+        }
         switch (packetParser.getIpProtocol()) {
             case IpProtocolNumbers.DISTANT_VECTOR_PACKETS:
                 this.handelDistantVectorPacket(packetParser);
                 break;
 
             case IpProtocolNumbers.ROUTING_PACKET:
+                System.out.println(packetParser.getTTL() + " ");
                 if (isSelfInterface(packetParser.getDstIp())) {
                     System.out.println("i got my packet :D");
                     packetParser.print();
                 } else {
                     Link link = forwardingTable.getLink(packetParser.getDstIp());
+                    packetParser.setTTL(packetParser.getTTL() - 1);
                     link.sendFrame(packetParser.getPacketData(), packetParser.getPacketSize());
                 }
                 break;
@@ -188,6 +219,7 @@ public class Node {
             pf.setIpProtocol(17);
             pf.setSrcIp(link.getLinkInterface());
             pf.setDstIp(link.getTargetInterface());
+            pf.setTTL(1);
             pf.setPayload(forwardingTable.getRoutingPacketPayload(link.getTargetInterface()));
 
             link.sendFrame(pf.getPacketData(), pf.getPacketSize());
@@ -235,6 +267,7 @@ public class Node {
         pf.setIpProtocol(IpProtocolNumbers.LINK_UP_PACKET);
         pf.setSrcIp(link.getLinkInterface());
         pf.setDstIp(link.getTargetInterface());
+        pf.setTTL(1);
         link.sendFrame(pf.getPacketData(), pf.getPacketSize());
 
         // TODO: announce link up.
@@ -255,6 +288,7 @@ public class Node {
         pf.setIpProtocol(IpProtocolNumbers.LINK_DOWN_PACKET);
         pf.setSrcIp(link.getLinkInterface());
         pf.setDstIp(link.getTargetInterface());
+        pf.setTTL(1);
         link.sendFrame(pf.getPacketData(), pf.getPacketSize());
         link.setActive(false);
 
@@ -275,6 +309,7 @@ public class Node {
         pf.setSrcIp(link.getLinkInterface());
         pf.setDstIp(ip);
         pf.setPayload(message);
+        pf.setTTL(MAX_NODE_NUMBER - 1);
 
         link.sendFrame(pf.getPacketData(), pf.getPacketSize());
     }
@@ -292,10 +327,59 @@ public class Node {
             pf.setIpProtocol(IpProtocolNumbers.LINK_DOWN_PACKET);
             pf.setSrcIp(link.getLinkInterface());
             pf.setDstIp(link.getTargetInterface());
+            pf.setTTL(1);
             link.sendFrame(pf.getPacketData(), pf.getPacketSize());
 
             link.close();
         }
         listener.close();
+    }
+
+    private void sendICMPTimeExceeded(PacketFactory packetParser) {
+        PacketFactory pf = new PacketFactory();
+        Link link = forwardingTable.getLink(packetParser.getSrcIp());
+        if (link == null) {
+            System.out.println("Time Exceeded Packet, packet SRC unknown.");
+            return;
+        }
+
+        pf.setSrcIp(link.getLinkInterface());
+        pf.setDstIp(packetParser.getSrcIp());
+        pf.setIpProtocol(IpProtocolNumbers.ICMP_TIME_EXEEDED_PACKETS);
+        link.sendFrame(pf.getPacketData(), pf.getPacketSize());
+    }
+
+    public void traceRouteInitializer(String ip) {
+        traceRouteTTL = 0;
+        traceRouteTragetIP = ip;
+        System.out.println("Traceroute to " + traceRouteTragetIP);
+        sendTraceRoutePacket();
+    }
+
+    private void traceRouteHandler(PacketFactory pf) {
+        if (traceRouteTTL < 0)
+            return;
+
+        System.out.println((traceRouteTTL + 1) + "  " + pf.getSrcIp());
+        if (pf.getSrcIp().equals(traceRouteTragetIP)) {
+            System.out.println("Traceroute finished in " + (traceRouteTTL + 1) +" hops");
+            traceRouteTTL = -1;
+            traceRouteTragetIP = "";
+        } else {
+            traceRouteTTL++;
+            sendTraceRoutePacket();
+        }
+    }
+
+    private void sendTraceRoutePacket() {
+        PacketFactory pf = new PacketFactory();
+        Link link = forwardingTable.getLink(traceRouteTragetIP);
+
+        pf.setIpProtocol(IpProtocolNumbers.ROUTING_PACKET);
+        pf.setDstIp(traceRouteTragetIP);
+        pf.setSrcIp(link.getLinkInterface());
+        pf.setTTL(traceRouteTTL);
+
+        link.sendFrame(pf.getPacketData(), pf.getPacketSize());
     }
 }
