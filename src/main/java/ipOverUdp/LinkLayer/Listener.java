@@ -41,4 +41,8 @@ public class Listener {
         }
 
     }
+
+    public void close() {
+        this.socket.close();
+    }
 }

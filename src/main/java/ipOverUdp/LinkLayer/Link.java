@@ -42,8 +42,10 @@ public class Link {
         }
 
 
-        if (size > MAX_FRAME_SIZE)
-            throw new RuntimeException("frameSize is greater than MTU");
+        if (size > MAX_FRAME_SIZE) {
+            System.out.println("Packet Dropped dou to frameSize is greater than MTU");
+            return;
+        }
 
         try {
             InetAddress address = InetAddress.getByName(ip);
@@ -93,5 +95,9 @@ public class Link {
                 return link;
         }
         return null;
+    }
+
+    public void close() {
+        this.socket.close();
     }
 }

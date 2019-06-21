@@ -43,8 +43,8 @@ public class Node {
         //  0-parse given file -- done
         //  1-initialize links -- done
         //  2-run command handler -- done
-        //  3-forwarding table,
-        //  4-DV routing algorithm,
+        //  3-forwarding table -- done
+        //  4-DV routing algorithm -- done
         //  5-traceroute and ICMP
 
         listener = new Listener(input.getSelfHost(), input.getSelfPort());
@@ -79,7 +79,7 @@ public class Node {
                 handelNewPacket(newFrame.getKey(), newFrame.getValue());
         }
 
-        // TODO: close sockets. close open files.
+        quietNode();
     }
 
     private void handelCommand(CommandName commandType, String[] args) {
@@ -123,7 +123,6 @@ public class Node {
 
             case IpProtocolNumbers.ROUTING_PACKET:
                 if (isSelfInterface(packetParser.getDstIp())) {
-                    // TODO: implement this part.
                     System.out.println("i got my packet :D");
                     packetParser.print();
                 } else {
@@ -159,14 +158,6 @@ public class Node {
                         e.printStackTrace();
                     }
                 }
-
-//                Runnable r = ipProtocolHandler.get(packetParser.getIpProtocol());
-//                if (r != null)
-//                    r.run(packetParser);
-//                else {
-//                    System.out.println("Invalid IP Protocol Number.");
-//                    System.out.println("Dropping Packet.");
-//                }
                 break;
 
         }
@@ -290,5 +281,21 @@ public class Node {
 
     public void registerHandler(Method method, int protocolNum) {
         this.ipProtocolHandler.put(protocolNum, method);
+    }
+
+    private void quietNode() {
+        for (Link link: links) {
+            if (!link.isActive())
+                continue;
+
+            PacketFactory pf = new PacketFactory();
+            pf.setIpProtocol(IpProtocolNumbers.LINK_DOWN_PACKET);
+            pf.setSrcIp(link.getLinkInterface());
+            pf.setDstIp(link.getTargetInterface());
+            link.sendFrame(pf.getPacketData(), pf.getPacketSize());
+
+            link.close();
+        }
+        listener.close();
     }
 }
