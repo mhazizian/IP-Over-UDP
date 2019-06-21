@@ -31,6 +31,10 @@ public class LnxParser {
         if (sc.hasNextLine()) {
             String line = sc.nextLine();
             String[] args = line.split(" ");
+
+            if (args[0].equals("#"))
+                return nextLine();
+
             linkHost = args[0];
             linkPort = Integer.parseInt(args[1]);
             linkIpSrc = args[2];
